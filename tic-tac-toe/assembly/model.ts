@@ -1,4 +1,4 @@
-import { PersistentVector, RNG, logging, context } from "near-sdk-as";
+import { PersistentVector, RNG, context, PersistentMap, logging } from "near-sdk-as";
 
 export enum GameState {
   Created,
@@ -14,10 +14,17 @@ export class TicTacToe {
   player1: string;
   tabuleiro: PersistentVector<PersistentVector<i8>>;
   constructor() {
-    const RNG = new RNG<u32>(1, u32.MAX_VALUE);
-    this.gameId = RNG.next();
+
+    // const rng = new RNG<u32>(1, u32.MAX_VALUE);
+    // const roll = rng.next();
+    // this.gameId = roll;
+    this.gameId = counter;
+    counter++;
+    // u32.add(counter, 1);
+    
     this.gameState = GameState.Created;
     this.player1 = context.sender;
+  
     this.tabuleiro = new PersistentVector<PersistentVector<i8>>("c");
     for (let i=0; i<3; i++) {
       let linha = new PersistentVector<i8>(`${i}`);
@@ -29,4 +36,5 @@ export class TicTacToe {
   }
 }
 
-export const games = new PersistentVector<TicTacToe>("c");
+export const games = new PersistentMap<u32, TicTacToe>("c");
+export let counter: u32 = 0;
