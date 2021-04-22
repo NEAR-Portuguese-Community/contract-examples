@@ -40,6 +40,10 @@ function fillBoard(line: PersistentVector<i8>, col: i8, player: string, game: Ti
   }
 }
 
+export function viewBoard(gameId: u32): string {
+  let game = games.getSome(gameId);
+  return getBoard(game.line0, game.line1, game.line2);
+}
 
 function getBoard(line0: PersistentVector<i8>, line1: PersistentVector<i8>, line2: PersistentVector<i8>): string {
   var parseBoard = "";
