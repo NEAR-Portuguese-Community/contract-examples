@@ -10,15 +10,11 @@ export function createGame(player2: string): u32 {
 
 export function play(gameId: u32, lin: i8): Array<i8> {
   assert(games.contains(gameId), 'GameId not found');
-  
+
   let game = games.getSome(gameId);
   assert(game.nextPlayer==context.sender, 'Its not your turn');
   assert(game.gameState==GameState.Created, 'Game not started or it has finished');
-  logging.log(game.board[lin]);
   assert(game.board[lin] == 0, 'This line is already signed');
-  
-  logging.log(context.sender);
-  logging.log(game.nextPlayer);
 
   if (context.sender == game.player1) {
     game.board[lin] = 1;
@@ -35,9 +31,9 @@ export function play(gameId: u32, lin: i8): Array<i8> {
 
 
 function getBoard(board: PersistentVector<i8>): Array<i8> {
-  
+
   var parseBoard = new Array<i8>();
-  
+
   for (let i = 0; i < board.length; ++i) {
     parseBoard.push(board[i]);
   }
