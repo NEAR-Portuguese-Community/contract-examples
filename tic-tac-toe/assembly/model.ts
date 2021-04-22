@@ -12,21 +12,24 @@ export class TicTacToe {
   gameId: u32;
   gameState: GameState;
   player1: string;
+  amount1: u128;
   player2: string;
+  amount2: u128;
 
   nextPlayer: string;
   line0: PersistentVector<i8>;
   line1: PersistentVector<i8>;
   line2: PersistentVector<i8>;
-  constructor(setPlayer2: string) {
+  constructor() {
     let rng = new RNG<u32>(1, u32.MAX_VALUE);
     let roll = rng.next();
     this.gameId = roll;
 
     this.gameState = GameState.Created;
     this.player1 = context.sender;
+    this.amount1 = context.attachedDeposit;
     this.nextPlayer = this.player1;
-    this.player2 = setPlayer2;
+    this.player2 = "";
 
     this.line0 = new PersistentVector<i8>(`${this.gameId}-0`);
     this.line1 = new PersistentVector<i8>(`${this.gameId}-1`);

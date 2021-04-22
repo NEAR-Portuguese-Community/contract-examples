@@ -1,10 +1,8 @@
 import { logging, context, PersistentVector } from "near-sdk-as";
 import { TicTacToe, games, GameState } from "./model";
 
-
-export function createGame(player2: string): u32 {
-  assert(player2 != context.sender, 'You cant play with your self :(');
-  const game = new TicTacToe(player2);
+export function createGame(): u32 {
+  const game = new TicTacToe();
   games.set(game.gameId, game);
   return game.gameId;
 }
@@ -20,7 +18,7 @@ export function play(gameId: u32, lin: i8, col: i8): string {
   if (lin==1) assert(game.line1[col]==0, 'Position already asigned');
   if (lin==2) assert(game.line2[col]==0, 'Position already asigned');
   assert(game.nextPlayer == currentPlayer, 'Its not your turn');
-  assert(game.gameState == GameState.Created, 'Game not started or it has finished');
+  assert(game.gameState == GameState.InProgress, 'Game is not in progress');
 
   if (lin == 0) {
     fillBoard(game.line0, col, currentPlayer, game);
@@ -47,7 +45,7 @@ export function play(gameId: u32, lin: i8, col: i8): string {
 }
 
 function finishGame(winnerId: string): string {
-  return `Congratulations ${winnerId} is the winner`;
+  return `Congratulations: ${winnerId} is the winner`;
 }
 
 function fillBoard(line: PersistentVector<i8>, col: i8, player: string, game: TicTacToe): void {
@@ -80,14 +78,14 @@ export function getBoard(line0: PersistentVector<i8>, line1: PersistentVector<i8
     }
 
     if (i != 2) {
-      parseBoard = parseBoard.concat('\n')
+      parseBoard = parseBoard.concat(' | ')
     }
   }
 
   return parseBoard;
 }
 
-function verifyBoard(line0: PersistentVector<i8>, line1: PersistentVector<i8>, line2: PersistentVector<i8>): u8 {
+export function verifyBoard(line0: PersistentVector<i8>, line1: PersistentVector<i8>, line2: PersistentVector<i8>): u8 {
   let col0Count = 0;
   let col1Count = 0;
   let col2Count = 0;
@@ -114,8 +112,26 @@ function verifyBoard(line0: PersistentVector<i8>, line1: PersistentVector<i8>, l
       if (lineCount == 3) return 1;
     }
   }
-  if (col0Count == -3 || col1Count == -3 || col2Count == -3) return 2;
-  if (col0Count == 3 || col1Count == 3 || col2Count == 3) return 1;
-
+  if (col0Count == -3 || col1Count == -3 || col2Count == -3) {
+    return 2;
+  }
+  if (col0Count == 3 || col1Count == 3 || col2Count == 3) {
+    return 1;
+  }
   return 0;
+}
+
+export function joinGame(gameId: u32): string {
+  assert(games.contains(gameId), 'Game does not exists');
+  let game = games.getSome(gameId);
+  assert(game.player2 == "", 'This game already has two players');
+  assert(game.player1 != context.sender, 'You cant play with youself :(');
+
+  game.player2 = context.sender;
+  game.amount2 = context.attachedDeposit;
+  game.gameState = GameState.InProgress;
+
+  games.set(gameId, game);
+
+  return "Joined the game, lets play!";
 }
