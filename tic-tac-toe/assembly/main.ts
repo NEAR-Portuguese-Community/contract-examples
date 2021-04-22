@@ -1,41 +1,46 @@
-import { logging, context } from "near-sdk-as";
+import { logging, context, PersistentVector } from "near-sdk-as";
 import { TicTacToe, games, GameState } from "./model";
 
 
-export function createGame(): u32 {
-  const game = new TicTacToe();
+export function createGame(player2: string): u32 {
+  const game = new TicTacToe(player2);
   games.set(game.gameId, game);
-  return game.gameId; 
+  return game.gameId;
 }
 
-export function play(gameId: u32, lin: i8, col: i8): u32 {
-  if (games.contains(gameId)) {
-    if (games.getSome(gameId).gameState==GameState.Created) {
-      let game = games.getSome(gameId);
-      game.tabuleiro[lin][col] = 1;
+export function play(gameId: u32, lin: i8): Array<i8> {
+  assert(games.contains(gameId), 'GameId not found');
+  
+  let game = games.getSome(gameId);
+  assert(game.nextPlayer==context.sender, 'Its not your turn');
+  assert(game.gameState==GameState.Created, 'Game not started or it has finished');
+  logging.log(game.board[lin]);
+  assert(game.board[lin] == 0, 'This line is already signed');
+  
+  logging.log(context.sender);
+  logging.log(game.nextPlayer);
 
-      return gameId;
-    }
+  if (context.sender == game.player1) {
+    game.board[lin] = 1;
+    game.nextPlayer = game.player2;
+  } else if(context.sender == game.player2){
+    game.board[lin] = 2;
+    game.nextPlayer = game.player1;
   }
-  return 0;
+
+  games.set(game.gameId, game);
+
+  return getBoard(game.board);
 }
 
-export function getBoard(gameId: u32): Array<Array<u8>> {
-  if (games.contains(gameId)) {
-    if (games.getSome(gameId).gameState==GameState.Created) {
-      let game = games.getSome(gameId);
-      let board = game.tabuleiro;
 
-      logging.log(board.);
-      let res = new Array<Array<u8>>();
-      // for (let i=0; i<3; i++) {
-      //   res.push(new Array<u8>(3));
-      //   for (let j=0; j<3; j++) {
-      //     res[i][j] = board[i][j];
-      //   }
-      // }
-      return res;
-    }
+function getBoard(board: PersistentVector<i8>): Array<i8> {
+  
+  var parseBoard = new Array<i8>();
+  
+  for (let i = 0; i < board.length; ++i) {
+    parseBoard.push(board[i]);
   }
-  return new Array<Array<u8>>();
+
+  return parseBoard;
 }
