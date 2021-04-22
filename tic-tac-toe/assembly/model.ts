@@ -1,4 +1,4 @@
-import { PersistentVector, RNG, context, PersistentMap, logging, storage } from "near-sdk-as";
+import { PersistentVector, RNG, context, PersistentMap, logging, storage, u128 } from "near-sdk-as";
 
 export enum GameState {
   Created,
@@ -41,3 +41,8 @@ export class TicTacToe {
 }
 
 export const games = new PersistentMap<u32, TicTacToe>("g");
+
+
+// so init() funcition is aways called when I deploy the contract?
+
+// I want to make a on how to save a 2 dimentions array
