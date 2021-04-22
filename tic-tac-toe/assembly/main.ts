@@ -8,34 +8,56 @@ export function createGame(player2: string): u32 {
   return game.gameId;
 }
 
-export function play(gameId: u32, lin: i8): Array<i8> {
+export function play(gameId: u32, lin: i8, col: i8): string {
   assert(games.contains(gameId), 'GameId not found');
 
   let game = games.getSome(gameId);
-  assert(game.nextPlayer==context.sender, 'Its not your turn');
+  let currentPlayer = context.sender;
+  assert(game.nextPlayer==currentPlayer, 'Its not your turn');
   assert(game.gameState==GameState.Created, 'Game not started or it has finished');
-  assert(game.board[lin] == 0, 'This line is already signed');
+  //assert(game.line0[lin] == 0, 'This line is already signed');
 
-  if (context.sender == game.player1) {
-    game.board[lin] = 1;
-    game.nextPlayer = game.player2;
-  } else if(context.sender == game.player2){
-    game.board[lin] = 2;
-    game.nextPlayer = game.player1;
+  if (lin == 0) {
+    fillBoard(game.line0, col, currentPlayer, game)
+  } else if (lin == 1) {
+    fillBoard(game.line1, col, currentPlayer, game)
+  } else if (lin == 2) {
+    fillBoard(game.line2, col, currentPlayer, game)
   }
 
   games.set(game.gameId, game);
 
-  return getBoard(game.board);
+  return getBoard(game.line0, game.line1, game.line2);
+}
+
+function fillBoard(line: PersistentVector<i8>, col: i8, player: string, game: TicTacToe): void {
+  if (player == game.player1) {
+    line[col] = 1;
+    game.nextPlayer = game.player2;
+  } else if(player == game.player2){
+    line[col] = 2;
+    game.nextPlayer = game.player1;
+  }
 }
 
 
-function getBoard(board: PersistentVector<i8>): Array<i8> {
+function getBoard(line0: PersistentVector<i8>, line1: PersistentVector<i8>, line2: PersistentVector<i8>): string {
+  var parseBoard = "";
 
-  var parseBoard = new Array<i8>();
+  for (let i = 0; i < 3; ++i) {
+    for (let j = 0; j < 3; ++j) {
+      if (i==0) {
+        parseBoard = parseBoard.concat(line0[j].toString())
+      } else if (i==1) {
+        parseBoard = parseBoard.concat(line1[j].toString())
+      } else if (i==2) {
+        parseBoard = parseBoard.concat(line2[j].toString())
+      }
+    }
 
-  for (let i = 0; i < board.length; ++i) {
-    parseBoard.push(board[i]);
+    if (i!=2) {
+      parseBoard = parseBoard.concat('-')
+    }
   }
 
   return parseBoard;

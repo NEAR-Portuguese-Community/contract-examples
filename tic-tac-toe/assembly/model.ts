@@ -13,10 +13,11 @@ export class TicTacToe {
   gameState: GameState;
   player1: string;
   player2: string;
-  
+
   nextPlayer: string;
-  board: PersistentVector<i8>;
-  // board: PersistentVector<PersistentVector<i8>>;
+  line0: PersistentVector<i8>;
+  line1: PersistentVector<i8>;
+  line2: PersistentVector<i8>;
   constructor(setPlayer2: string) {
     let rng = new RNG<u32>(1, u32.MAX_VALUE);
     let roll = rng.next();
@@ -27,10 +28,14 @@ export class TicTacToe {
     this.nextPlayer = this.player1;
     this.player2 = setPlayer2;
 
-    this.board = new PersistentVector<i8>(`${this.gameId}`);
-    
+    this.line0 = new PersistentVector<i8>(`${this.gameId}-0`);
+    this.line1 = new PersistentVector<i8>(`${this.gameId}-1`);
+    this.line2 = new PersistentVector<i8>(`${this.gameId}-2`);
+
     for (let i=0; i<3; i++) {
-      this.board.push(0);
+      this.line0.push(0);
+      this.line1.push(0);
+      this.line2.push(0);
     }
   }
 }
