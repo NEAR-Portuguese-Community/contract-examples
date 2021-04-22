@@ -2,4 +2,3 @@ node_modules
 out
 neardev
 package-lock.json
-yarn.lock
