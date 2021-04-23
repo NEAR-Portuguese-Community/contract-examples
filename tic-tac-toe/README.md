@@ -15,13 +15,13 @@ near dev-deploy ./out/main.wasm
 ## Run the game
 **Create a game**
 ```
-near call <contract-id> createGame '{"player2": "murilo.testnet"}' --account_id <account-id>
+near call <contract-id> createGame '{"player2": "murilo.testnet"}' --account_id <account-id> --amount 5
 # save the game id in your clipboard
 ```
 
 **Join a game (player 2)**
 ```
-near call <contract-id> joinGame '{"gameId": <game-id>}' --account_id <account-id>
+near call <contract-id> joinGame '{"gameId": <game-id>}' --account_id <account-id> --amount 5
 ```
 
 **Play the game**
