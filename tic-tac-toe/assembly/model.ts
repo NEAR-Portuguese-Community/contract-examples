@@ -3,8 +3,7 @@ import { PersistentVector, RNG, context, PersistentMap, logging, storage, u128 }
 export enum GameState {
   Created,
   InProgress,
-  Completed,
-  NotFound
+  Completed
 }
 
 @nearBindgen
@@ -15,6 +14,7 @@ export class TicTacToe {
   amount1: u128;
   player2: string;
   amount2: u128;
+  roundsPlayed: u8;
 
   nextPlayer: string;
   line0: PersistentVector<i8>;
@@ -30,6 +30,7 @@ export class TicTacToe {
     this.amount1 = context.attachedDeposit;
     this.nextPlayer = this.player1;
     this.player2 = "";
+    this.roundsPlayed = 0;
 
     this.line0 = new PersistentVector<i8>(`${this.gameId}-0`);
     this.line1 = new PersistentVector<i8>(`${this.gameId}-1`);

@@ -15,8 +15,8 @@ near dev-deploy ./out/main.wasm
 ## Run the game
 **Create a game**
 ```
-near call <contract-id> createGame '{"player2": "murilo.testnet"}' --account_id <account-id> --amount 5
-# save the game id in your clipboard
+near call <contract-id> createGame --account_id <account-id> --amount 5
+# save the game id in your clipboard and send it to your friend
 ```
 
 **Join a game (player 2)**

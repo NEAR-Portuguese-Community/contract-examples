@@ -1,4 +1,4 @@
-import { logging, context, PersistentVector } from "near-sdk-as";
+import { logging, context, PersistentVector, ContractPromiseBatch, u128 } from "near-sdk-as";
 import { TicTacToe, games, GameState } from "./model";
 
 export function createGame(): u32 {
@@ -27,35 +27,24 @@ export function play(gameId: u32, lin: i8, col: i8): string {
   } else if (lin == 2) {
     fillBoard(game.line2, col, currentPlayer, game);
   }
-
+  
   let res = verifyBoard(game.line0, game.line1, game.line2);
   if (res == 1) {
-    game.gameState = GameState.Completed;
-    games.set(game.gameId, game);
-    return finishGame(game.player1);
+    return finishGame(game, game.player1);
   } 
-  if (res == 2) {
+  if (res == -1) {
+    return finishGame(game, game.player2);
+  }
+  
+  game.roundsPlayed++;
+  if (game.roundsPlayed == 9) {
     game.gameState = GameState.Completed;
     games.set(game.gameId, game);
-    return finishGame(game.player2);
+    return "Game tied. No winners!"
   }
-
+  
   games.set(game.gameId, game);
   return getBoard(game.line0, game.line1, game.line2);
-}
-
-function finishGame(winnerId: string): string {
-  return `Congratulations: ${winnerId} is the winner`;
-}
-
-function fillBoard(line: PersistentVector<i8>, col: i8, player: string, game: TicTacToe): void {
-  if (player == game.player1) {
-    line[col] = 1;
-    game.nextPlayer = game.player2;
-  } else if (player == game.player2) {
-    line[col] = -1;
-    game.nextPlayer = game.player1;
-  }
 }
 
 export function viewBoard(gameId: u32): string {
@@ -85,42 +74,6 @@ export function getBoard(line0: PersistentVector<i8>, line1: PersistentVector<i8
   return parseBoard;
 }
 
-export function verifyBoard(line0: PersistentVector<i8>, line1: PersistentVector<i8>, line2: PersistentVector<i8>): u8 {
-  let col0Count = 0;
-  let col1Count = 0;
-  let col2Count = 0;
-  for (let i = 0; i < 3; ++i) {
-    let lineCount = 0;
-    for (let j = 0; j < 3; ++j) {
-      if (i == 0) {
-        if (j==0) col0Count += line0[j];
-        if (j==1) col1Count += line0[j];
-        if (j==2) col2Count += line0[j];
-        lineCount += line0[j];
-      } else if (i == 1) {
-        if (j==0) col0Count += line1[j];
-        if (j==1) col1Count += line1[j];
-        if (j==2) col2Count += line1[j];
-        lineCount += line1[j];
-      } else if (i == 2) {
-        if (j==0) col0Count += line2[j];
-        if (j==1) col1Count += line2[j];
-        if (j==2) col2Count += line2[j];
-        lineCount += line2[j];
-      }
-      if (lineCount == -3) return 2;
-      if (lineCount == 3) return 1;
-    }
-  }
-  if (col0Count == -3 || col1Count == -3 || col2Count == -3) {
-    return 2;
-  }
-  if (col0Count == 3 || col1Count == 3 || col2Count == 3) {
-    return 1;
-  }
-  return 0;
-}
-
 export function joinGame(gameId: u32): string {
   assert(games.contains(gameId), 'Game does not exists');
   let game = games.getSome(gameId);
@@ -134,4 +87,54 @@ export function joinGame(gameId: u32): string {
   games.set(gameId, game);
 
   return "Joined the game, lets play!";
+}
+
+function verifyBoard(line0: PersistentVector<i8>, line1: PersistentVector<i8>, line2: PersistentVector<i8>): i8 {
+  if(isEqual(line0[0], line0[1], line0[2])) {
+    return line0[0];
+  } else if (isEqual(line1[0], line1[1], line1[2])) {
+    return line1[0];
+  } else if (isEqual(line2[0], line2[1], line2[2])) {
+    return line2[0];
+  } else if (isEqual(line0[0], line1[0], line2[0])) {
+    return line0[0];
+  } else if (isEqual(line0[1], line1[1], line2[1])) {
+    return line0[1];
+  } else if (isEqual(line0[2], line1[2], line2[2])) {
+    return line0[2];
+  } else if (isEqual(line0[0], line1[1], line2[2])) {
+    return line0[0];
+  } else if (isEqual(line2[0], line1[1], line0[2])) {
+    return line2[0];
+  } else {
+    return 0;
+  }
+}
+
+function isEqual(x: i8, y: i8, z: i8): boolean {
+  if (x == y && y == z && z != 0) {
+    return true;
+  }
+  return false;
+}
+
+function finishGame(game: TicTacToe, winnerId: string): string {
+  game.gameState = GameState.Completed;
+  
+  const to_winner = ContractPromiseBatch.create(winnerId);
+  const amount_to_receive = u128.add(game.amount2, game.amount1);
+  to_winner.transfer(amount_to_receive);
+  
+  games.set(game.gameId, game);
+  return `Congratulations: ${winnerId} is the winner and received ${amount_to_receive}`;
+}
+
+function fillBoard(line: PersistentVector<i8>, col: i8, player: string, game: TicTacToe): void {
+  if (player == game.player1) {
+    line[col] = 1;
+    game.nextPlayer = game.player2;
+  } else if (player == game.player2) {
+    line[col] = -1;
+    game.nextPlayer = game.player1;
+  }
 }
